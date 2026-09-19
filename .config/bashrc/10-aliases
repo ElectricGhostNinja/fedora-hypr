@@ -62,3 +62,8 @@ alias ascii='~/.config/ml4w/scripts/ml4w-ascii-header'
 # System
 # -----------------------------------------------------
 alias update-grub='sudo grub-mkconfig -o /boot/grub/grub.cfg'
+
+# -----------------------------------------------------
+# Dotfiles (bare repo at ~/.dotfiles)
+# -----------------------------------------------------
+alias dot='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
