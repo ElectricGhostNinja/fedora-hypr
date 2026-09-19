@@ -1,0 +1,11 @@
+# User overrides — zz sorts last, so this wins over config.toml and
+# noctalia-full-config.toml when the same key is set elsewhere.
+
+[wallpaper]
+directory = "~/.local/share/wallpapers"
+
+[wallpaper.automation]
+enabled = true
+interval_seconds = 1800
+order = "random"
+recursive = true
