@@ -1,0 +1,32 @@
+# Dotfiles root .gitignore — ignore everything, whitelist what to track.
+# Works with the bare repo at ~/.dotfiles (alias: `dot`).
+
+*
+*/
+
+# ---- home files ----
+!.bashrc
+!.zshrc
+!.profile
+!.gitignore
+!.gitconfig
+!.ssh/
+!.ssh/config
+
+# ---- .config (everything under it is tracked unless denied below) ----
+!.config/
+!.config/**
+
+# ---- secrets / machine state - never publish ----
+.config/BraveSoftware/
+.config/cosmic/
+.config/dconf/
+.config/easyeffects/
+.config/ml4w/
+.config/opencode/
+.config/mozilla/
+.config/pulse/
+.config/session/
+.config/hypr.bak/
+.config/hypr.bak*/
+.config/hypr/*.bak*
