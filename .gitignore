@@ -10,6 +10,8 @@
 !.profile
 !.gitignore
 !.gitconfig
+!README.md
+!LICENSE
 !.ssh/
 !.ssh/config
 
