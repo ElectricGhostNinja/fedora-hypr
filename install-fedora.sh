@@ -117,7 +117,7 @@ install_hyprland_environment() {
        7zip
        jq
        poppler-utils
-       imageMagick
+       ImageMagick
        chafa
        zoxide
     )
