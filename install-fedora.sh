@@ -25,6 +25,7 @@ check_requirement() {
 
 log_info "Checking prerequisites..."
 check_requirement "git"
+check_requirement "findmnt"
 
 if ! command -v rpm &> /dev/null; then
     log_error "This installer targets Fedora Linux only."
@@ -33,7 +34,7 @@ fi
 FEDORA_RELEASE="$(rpm -E %fedora)"
 log_info "Detected Fedora release: $FEDORA_RELEASE"
 case "$FEDORA_RELEASE" in
-    rawhide|4[4-9]|5[0-9]) ;;
+    40|rawhide|4[1-9]|5[0-9]) ;;
     *)
         log_warn "Fedora $FEDORA_RELEASE is untested."
         ;;
@@ -50,7 +51,7 @@ setup_snapper() {
     else
         git clone https://github.com/SysGuides/sysguides-snapper-fedora "$snapper_repo_dir"
     fi
-    (cd "$snapper_repo_dir" && chmod +x install.sh && ./install.sh)
+    (cd "$snapper_repo_dir" && chmod +x install.sh && sudo ./install.sh)
 }
 
 setup_snapper
@@ -74,9 +75,19 @@ install_hyprland_environment() {
     log_info "Installing desktop environment..."
     sudo dnf install -y dnf-plugins-core
     sudo dnf copr enable -y lionheartp/Hyprland wezfurlong/wezterm-nightly lihaohong/yazi
-    sudo dnf install -y hyprland hyprland-guiutils xdg-desktop-portal-hyprland noctalia flatpak
+    sudo dnf install -y hyprland hyprland-guiutils xdg-desktop-portal-hyprland flatpak
 }
 
 install_hyprland_environment
+
+setup_cloudflare_dns() {
+    log_info "Configuring Cloudflare DNS..."
+    sudo mkdir -p /etc/systemd/resolved.conf.d
+    echo -e "[Resolve]\nDNS=1.1.1.1 1.0.0.1" | sudo tee /etc/systemd/resolved.conf.d/cloudflare.conf > /dev/null
+    sudo systemctl restart systemd-resolved
+    log_info "Cloudflare DNS configured successfully."
+}
+
+setup_cloudflare_dns
 
 log_info "Setup completed successfully!"
