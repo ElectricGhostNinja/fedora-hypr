@@ -12,6 +12,7 @@
 !.gitconfig
 !README.md
 !LICENSE
+!install-fedora.sh
 !.ssh/
 !.ssh/config
 
