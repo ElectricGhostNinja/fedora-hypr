@@ -112,21 +112,16 @@ setup_rpmfusion() {
     sudo dnf group upgrade -y sound-and-video
 
     log_info "Installing AMD (mesa) hardware-accelerated codec drivers..."
+    # Fedora 44+ merged mesa-va-drivers into mesa-dri-drivers and moved to a
+    # "parallel installation" model — installing -freeworld directly alongside
+    # the base packages, no 'dnf swap' needed (swap can misfire and propose
+    # removing huge swaths of the system on current Fedora).
     sudo dnf install -y mesa-va-drivers-freeworld
-
-    if rpm -q mesa-vulkan-drivers &> /dev/null; then
-        sudo dnf swap -y mesa-vulkan-drivers{,-freeworld}
-    else
-        log_info "mesa-vulkan-drivers already swapped (or not present); skipping swap."
-    fi
+    sudo dnf install -y mesa-vulkan-drivers-freeworld
 
     # i686 (32-bit) compat versions, needed for Steam and similar 32-bit apps
     sudo dnf install -y mesa-va-drivers-freeworld.i686
-    if rpm -q mesa-vulkan-drivers.i686 &> /dev/null; then
-        sudo dnf swap -y mesa-vulkan-drivers{,-freeworld}.i686
-    else
-        log_info "mesa-vulkan-drivers.i686 already swapped (or not present); skipping swap."
-    fi
+    sudo dnf install -y mesa-vulkan-drivers-freeworld.i686
 
     log_info "Installing Intel hardware-accelerated codec drivers..."
     # intel-media-driver covers Broadwell (2014) and newer. If you're on older
