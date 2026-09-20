@@ -33,3 +33,16 @@
 .config/hypr.bak/
 .config/hypr.bak*/
 .config/hypr/*.bak*
+
+# ---- untracked app / game state ----
+.config/StardewValley/
+.config/Vampire_Survivors/
+.config/Vampire_Survivors_1014408504/
+.config/Vampire_Survivors_Data/
+.config/chromium/
+.config/doom/
+.config/emacs/
+.config/qBittorrent/
+.config/systemd/
+.config/unity3d/
+.config/winboat/
