@@ -46,3 +46,24 @@
 .config/systemd/
 .config/unity3d/
 .config/winboat/
+
+# ---- Firefox: track settings only, never profile data (cookies, logins, keys, history) ----
+!.config/mozilla/
+!.config/mozilla/firefox/
+!.config/mozilla/firefox/profiles.ini
+!.config/mozilla/firefox/installs.ini
+.config/mozilla/firefox/Crash Reports/
+.config/mozilla/firefox/Pending Pings/
+.config/mozilla/firefox/Profile Groups/
+!.config/mozilla/firefox/pir84aek.default-release/
+.config/mozilla/firefox/pir84aek.default-release/*
+!.config/mozilla/firefox/pir84aek.default-release/prefs.js
+!.config/mozilla/firefox/pir84aek.default-release/extensions.json
+!.config/mozilla/firefox/pir84aek.default-release/containers.json
+!.config/mozilla/firefox/pir84aek.default-release/handlers.json
+!.config/mozilla/firefox/nzw6l6h5.default/
+.config/mozilla/firefox/nzw6l6h5.default/*
+!.config/mozilla/firefox/nzw6l6h5.default/prefs.js
+!.config/mozilla/firefox/nzw6l6h5.default/extensions.json
+!.config/mozilla/firefox/nzw6l6h5.default/containers.json
+!.config/mozilla/firefox/nzw6l6h5.default/handlers.json
