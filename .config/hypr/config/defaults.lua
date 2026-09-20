@@ -3,5 +3,5 @@
 TERMINAL     = "wezterm"
 FILE_MANAGER = "yazi"
 BROWSER      = "firefox"
-EDITOR       = "nvim"
+EDITOR       = "emacs"
 CALCULATOR   = "gnome-calculator"
