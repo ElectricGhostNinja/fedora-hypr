@@ -53,6 +53,94 @@ case "$FEDORA_RELEASE" in
 esac
 
 # ==============================================================================
+# 1a. SNAPSHOT MANAGEMENT (SNAPPER + GRUB-BTRFS + BTRFS ASSISTANT)
+# ==============================================================================
+# Placed before RPM Fusion / package installs so the DNF pre/post snapshot
+# hooks are active for every transaction the rest of this script performs.
+setup_snapper() {
+    if [ "$(findmnt -no FSTYPE /)" != "btrfs" ]; then
+        log_warn "Root filesystem is not Btrfs; skipping Snapper setup."
+        return
+    fi
+
+    local snapper_repo_dir="$HOME/sysguides-snapper-fedora"
+
+    if [ -d "$snapper_repo_dir" ]; then
+        log_info "Snapper setup repo already present at $snapper_repo_dir; skipping re-clone."
+    else
+        log_info "Cloning SysGuides Snapper setup scripts..."
+        git clone https://github.com/SysGuides/sysguides-snapper-fedora "$snapper_repo_dir"
+    fi
+
+    log_warn "About to run a third-party installer that modifies GRUB and installs DNF hooks."
+    log_warn "Review it yourself at https://github.com/SysGuides/sysguides-snapper-fedora if you haven't already."
+
+    (
+        cd "$snapper_repo_dir"
+        chmod +x install.sh
+        ./install.sh
+    )
+
+    log_warn "A reboot is recommended after this step for the GRUB snapshot menu to take effect."
+}
+
+setup_snapper
+
+# ==============================================================================
+# 1b. RPM FUSION (FREE + NONFREE) AND MULTIMEDIA CODECS
+# ==============================================================================
+setup_rpmfusion() {
+    log_info "Enabling RPM Fusion Free and Nonfree repositories..."
+    sudo dnf install -y \
+        "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm" \
+        "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
+
+    log_info "Enabling the Cisco OpenH264 repo..."
+    sudo dnf config-manager setopt fedora-cisco-openh264.enabled=1
+
+    log_info "Installing full multimedia codec support..."
+    if rpm -q ffmpeg-free &> /dev/null; then
+        # Swap Fedora's codec-light ffmpeg-free for the full RPM Fusion build
+        sudo dnf swap -y ffmpeg-free ffmpeg --allowerasing
+    else
+        sudo dnf install -y ffmpeg --allowerasing
+    fi
+
+    sudo dnf groupupdate -y multimedia \
+        --setopt="install_weak_deps=False" \
+        --exclude=PackageKit-gstreamer-plugin
+    sudo dnf groupupdate -y sound-and-video
+
+    log_info "Installing AMD (mesa) hardware-accelerated codec drivers..."
+    sudo dnf install -y mesa-va-drivers-freeworld
+
+    if rpm -q mesa-vulkan-drivers &> /dev/null; then
+        sudo dnf swap -y mesa-vulkan-drivers{,-freeworld}
+    else
+        log_info "mesa-vulkan-drivers already swapped (or not present); skipping swap."
+    fi
+
+    # i686 (32-bit) compat versions, needed for Steam and similar 32-bit apps
+    sudo dnf install -y mesa-va-drivers-freeworld.i686
+    if rpm -q mesa-vulkan-drivers.i686 &> /dev/null; then
+        sudo dnf swap -y mesa-vulkan-drivers{,-freeworld}.i686
+    else
+        log_info "mesa-vulkan-drivers.i686 already swapped (or not present); skipping swap."
+    fi
+
+    log_info "Installing Intel hardware-accelerated codec drivers..."
+    # intel-media-driver covers Broadwell (2014) and newer. If you're on older
+    # Intel hardware, swap this for: sudo dnf install -y libva-intel-driver
+    sudo dnf install -y intel-media-driver
+
+    log_info "Enabling RPM Fusion Nonfree Tainted repo for closed-source firmware..."
+    sudo dnf install -y rpmfusion-nonfree-release-tainted
+    sudo dnf --repo=rpmfusion-nonfree-tainted install -y "*-firmware"
+}
+
+setup_rpmfusion
+
+# ==============================================================================
 # 2. CLONE DOTFILES REPOSITORY
 # ==============================================================================
 DOTFILES_REPO="https://github.com/ElectricGhostNinja/fedora-hypr.git"
@@ -84,6 +172,7 @@ install_hyprland_environment() {
     local hypr_pkgs=(
        # Compositor & Shell
        hyprland
+       hyprland-guiutils
        xdg-desktop-portal-hyprland
        noctalia
 
@@ -117,7 +206,7 @@ install_hyprland_environment() {
        7zip
        jq
        poppler-utils
-       ImageMagick
+       imageMagick
        chafa
        zoxide
     )
@@ -131,6 +220,50 @@ install_hyprland_environment() {
 
 # Execute package installation
 install_hyprland_environment
+
+install_vscode() {
+    if command -v code &> /dev/null; then
+        log_info "VS Code is already installed."
+        return
+    fi
+
+    log_info "Adding Microsoft VS Code repository..."
+    sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+    sudo tee /etc/yum.repos.d/vscode.repo > /dev/null <<'EOF'
+[code]
+name=Visual Studio Code
+baseurl=https://packages.microsoft.com/yumrepos/vscode
+enabled=1
+gpgcheck=1
+gpgkey=https://packages.microsoft.com/keys/microsoft.asc
+EOF
+
+    # dnf check-update exits 100 when updates are found, which set -e treats as failure
+    sudo dnf check-update || true
+
+    log_info "Installing VS Code..."
+    sudo dnf install -y code
+}
+
+install_doom_emacs() {
+    local doom_dir="$HOME/.config/emacs"
+
+    if [ -d "$doom_dir" ]; then
+        log_info "Doom Emacs framework already present at $doom_dir."
+    else
+        log_info "Cloning Doom Emacs framework..."
+        git clone --depth 1 https://github.com/doomemacs/doomemacs "$doom_dir"
+
+        log_info "Running Doom's installer (auto-confirming prompts)..."
+        yes | "$doom_dir/bin/doom" install
+    fi
+
+    # Make the 'doom' CLI available for the rest of this script and future shells
+    export PATH="$doom_dir/bin:$PATH"
+}
+
+install_vscode || log_warn "VS Code install failed; continuing with the rest of the script."
+install_doom_emacs || log_warn "Doom Emacs install failed; continuing with the rest of the script."
 
 # ==============================================================================
 # 4. SYMLINK CONFIGURATIONS
@@ -167,7 +300,7 @@ declare -A CONFIG_MAP=(
     [".config/fish"]="$HOME/.config/fish"
     [".config/wezterm"]="$HOME/.config/wezterm"
     [".config/yazi"]="$HOME/.config/yazi"
-    [".config/emacs"]="$HOME/.config/emacs"
+    [".config/doom"]="$HOME/.config/doom"
 )
 
 for folder in "${!CONFIG_MAP[@]}"; do
@@ -187,3 +320,49 @@ for file in "${root_dotfiles[@]}"; do
 done
 
 log_info "Setup completed successfully! If any backups were created, they are located in $BACKUP_DIR"
+
+# ==============================================================================
+# 6. CLOUDFLARE DNS (OPTIONAL, INTERACTIVE — RUNS LAST)
+# ==============================================================================
+# Uses systemd-resolved (which NetworkManager already defers DNS to on Fedora)
+# rather than systemd-networkd, so it doesn't fight NetworkManager for control
+# of your Wi-Fi interface. No hardcoded interface name needed either way.
+setup_cloudflare_dns() {
+    echo
+    read -r -p "Configure Cloudflare DNS (1.1.1.1) via systemd-resolved with DNS-over-TLS + DNSSEC? [y/N] " dns_confirm
+    case "$dns_confirm" in
+        [yY][eE][sS]|[yY]) ;;
+        *)
+            log_info "Skipping Cloudflare DNS setup."
+            return
+            ;;
+    esac
+
+    log_info "Configuring Cloudflare DNS via systemd-resolved..."
+
+    # Drop-in file, so we're not overwriting the package-managed resolved.conf directly
+    sudo mkdir -p /etc/systemd/resolved.conf.d
+    sudo tee /etc/systemd/resolved.conf.d/cloudflare.conf > /dev/null <<'EOF'
+[Resolve]
+DNS=1.1.1.1 1.0.0.1 2606:4700:4700::1111 2606:4700:4700::1001
+FallbackDNS=
+DNSOverTLS=yes
+DNSSEC=yes
+Domains=~.
+Cache=yes
+EOF
+
+    # Make sure NetworkManager hands DNS resolution off to systemd-resolved
+    # instead of writing DHCP-provided nameservers straight into /etc/resolv.conf
+    sudo mkdir -p /etc/NetworkManager/conf.d
+    sudo tee /etc/NetworkManager/conf.d/dns.conf > /dev/null <<'EOF'
+[main]
+dns=systemd-resolved
+EOF
+
+    sudo systemctl restart systemd-resolved
+
+    log_info "Cloudflare DNS configured. Verify with: resolvectl status"
+}
+
+setup_cloudflare_dns
