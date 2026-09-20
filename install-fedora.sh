@@ -106,10 +106,10 @@ setup_rpmfusion() {
         sudo dnf install -y ffmpeg --allowerasing
     fi
 
-    sudo dnf groupupdate -y multimedia \
+    sudo dnf group upgrade -y multimedia \
         --setopt="install_weak_deps=False" \
         --exclude=PackageKit-gstreamer-plugin
-    sudo dnf groupupdate -y sound-and-video
+    sudo dnf group upgrade -y sound-and-video
 
     log_info "Installing AMD (mesa) hardware-accelerated codec drivers..."
     sudo dnf install -y mesa-va-drivers-freeworld
