@@ -35,3 +35,6 @@ done
 if [ -f ~/.bashrc_custom ]; then
     source ~/.bashrc_custom
 fi
+
+# Added by cua-driver-rs installer — see https://github.com/trycua/cua
+export PATH="/home/ghost/.local/bin:$PATH"
