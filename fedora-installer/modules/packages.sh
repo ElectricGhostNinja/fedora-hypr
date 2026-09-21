@@ -10,7 +10,6 @@ install_hyprland_environment() {
        hyprland
        hyprland-guiutils
        xdg-desktop-portal-hyprland
-       noctalia
 
        # System Tooling
        flatpak

@@ -17,6 +17,6 @@ setup_snapper() {
     (
         cd "$snapper_repo_dir"
         chmod +x install.sh
-        ./install.sh
+        sudo ./install.sh
     ) || log_warn "Snapper installation encountered non-fatal issues; proceeding..."
 }
