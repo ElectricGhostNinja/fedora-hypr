@@ -12,7 +12,8 @@
 !.gitconfig
 !README.md
 !LICENSE
-!install-fedora.sh
+!fedora-installer/
+!fedora-installer/**
 !.ssh/
 !.ssh/config
 
