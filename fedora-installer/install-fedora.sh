@@ -14,6 +14,7 @@ setup_snapper
 setup_rpmfusion
 clone_dotfiles
 install_hyprland_environment
+install_noctalia || log_warn "Noctalia installation failed; see output above."
 install_vscode || log_warn "VS Code installation encountered an error."
 link_dotfiles
 install_doom_emacs || log_warn "Doom Emacs installation encountered an issue."

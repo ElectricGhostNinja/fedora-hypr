@@ -32,11 +32,11 @@ link_dotfiles() {
     )
 
     local folder
-    for folder in "${!CONFIG_MAP[@]:-}"; do
-        if [ -n "${folder:-}" ] && [ -d "$DOTFILES_DIR/$folder" ]; then
+    for folder in "${!CONFIG_MAP[@]}"; do
+        if [ -d "$DOTFILES_DIR/$folder" ]; then
             link_file "$DOTFILES_DIR/$folder" "${CONFIG_MAP[$folder]}"
         else
-            [ -n "${folder:-}" ] && log_warn "Config source '$DOTFILES_DIR/$folder' not present in repo; skipping."
+            log_warn "Config source '$DOTFILES_DIR/$folder' not present in repo; skipping."
         fi
     done
 

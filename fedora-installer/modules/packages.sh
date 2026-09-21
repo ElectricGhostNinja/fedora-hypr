@@ -73,3 +73,24 @@ EOF
     log_info "Installing VS Code..."
     sudo dnf install -y code
 }
+
+install_noctalia() {
+    if rpm -q noctalia &> /dev/null || rpm -q noctalia-git &> /dev/null; then
+        log_info "Noctalia is already installed."
+        return 0
+    fi
+
+    # Fedora 44+ ships "noctalia" in the default repos
+    if [ "${FEDORA_RELEASE:-0}" -ge 44 ]; then
+        log_info "Installing noctalia from the Fedora repos..."
+        if sudo dnf install -y noctalia; then
+            return 0
+        fi
+        log_warn "noctalia not found in Fedora repos; trying the Copr git snapshot..."
+    fi
+
+    # Older releases (or fallback): git snapshot from the LionHeartP Copr
+    log_info "Installing noctalia-git from the LionHeartP Copr..."
+    sudo dnf copr enable -y lionheartp/Hyprland
+    sudo dnf install -y noctalia-git
+}
